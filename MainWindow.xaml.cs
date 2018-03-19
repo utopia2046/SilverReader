@@ -1,18 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace SilverReaderApp
 {
@@ -24,14 +16,17 @@ namespace SilverReaderApp
     public partial class MainWindow : Window
     {
         private OverlayMessage overlayMessage;
+        private FlowDocHandler docHandler;
         private TextSpeaker reader = new TextSpeaker();
         private Action<Paragraph> SetParagraphMargin = (p) => { p.Margin = new Thickness(Settings.Default.ParagraphMargin); };
+        private string fileName;
 
         public MainWindow()
         {
             InitializeComponent();
             Trace.TraceInformation("Main windows initialized.");
-            overlayMessage = new OverlayMessage(this.overlayText);
+            overlayMessage = new OverlayMessage(this.overlayText, this.roundBorder);
+            docHandler = new FlowDocHandler(this.flowDoc);
 
             try
             {
@@ -54,6 +49,18 @@ namespace SilverReaderApp
             }
         }
 
+        private void GoToStart()
+        {
+            try
+            {
+                NavigationCommands.FirstPage.Execute(null, this.flowDoc);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("Error when navigating to start. Detail: " + ex.Message);
+            }
+        }
+
         private void mainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             try
@@ -72,7 +79,7 @@ namespace SilverReaderApp
             {
                 switch (e.Key)
                 {
-                    case Key.P:
+                    case Key.P:  // Play or Pause selection text
                         if (reader.IsReading && !reader.IsPaused)
                         {
                             reader.Pause();
@@ -92,18 +99,27 @@ namespace SilverReaderApp
                             overlayMessage.ShowMessage("Reading");
                         }
                         break;
-                    case Key.S:
+                    case Key.S:  // Stop reading
                         reader.Stop();
                         Trace.TraceInformation("Reader stopped.");
                         overlayMessage.ShowMessage("Stopped");
                         break;
-                    case Key.V:
+                    case Key.V:  // Replace document content with clipboard text
                         if (Clipboard.ContainsText() && (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)))
                         {
                             string text = Clipboard.GetText(TextDataFormat.Text);
-                            FlowDocHandler.UpdateFlowDocumentFromString(flowDoc, text, SetParagraphMargin);
+                            docHandler.UpdateFlowDocumentFromString(text, SetParagraphMargin);
+                            GoToStart();
                             Trace.TraceInformation("Document updated with clipboard text.");
                         }
+                        break;
+                    case Key.U:  // Reload file using utf-8
+                        LoadFile(fileName, Encoding.UTF8);
+                        Trace.TraceInformation("Reload document using UTF-8.");
+                        break;
+                    case Key.L:  // Reload file using code page number specified in config file
+                        LoadFile(fileName, Encoding.GetEncoding(Settings.Default.CodePage));
+                        Trace.TraceInformation("Reload document using code page.");
                         break;
                     default:
                         break;
@@ -120,29 +136,30 @@ namespace SilverReaderApp
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                var file = files[0];
-                Trace.TraceInformation("Drop file " + file);
-                try
-                {
-                    string[] lines = FileHandler.ReadFile(file, Encoding.Default);
-                    FlowDocHandler.UpdateFlowDocumentFromString(flowDoc, lines, SetParagraphMargin);
-                }
-                catch (Exception ex)
-                {
-                    Trace.TraceError("Error when reading file {0}.", file);
-                    Trace.TraceError("Detail: " + ex.Message);
-                }
+                fileName = files[0];
+                Trace.TraceInformation("Drop file " + fileName);
+                LoadFile(fileName, Encoding.Default);
+            }
+        }
+
+        private void LoadFile(string file, Encoding encoding)
+        {
+            try
+            {
+                string[] lines = FileHandler.ReadFile(file, encoding);
+                docHandler.UpdateFlowDocumentFromString(lines, SetParagraphMargin);
+                GoToStart();
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("Error when reading file {0}.", file);
+                Trace.TraceError("Detail: " + ex.Message);
             }
         }
 
         private void flowDocReader_PreviewDragOver(object sender, DragEventArgs e)
         {
             e.Handled = true;
-        }
-
-        private void flowDocReader_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            flowDoc.Blocks.First().BringIntoView();
         }
     }
 }

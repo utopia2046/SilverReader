@@ -21,8 +21,8 @@
         Background="{Binding Path=BackgroundColor, Source={x:Static p:Settings.Default}}" 
         Foreground="{Binding Path=TextColor, Source={x:Static p:Settings.Default}}" 
         Drop="flowDocReader_Drop" 
-        PreviewDragOver="flowDocReader_PreviewDragOver" DataContextChanged="flowDocReader_DataContextChanged"
-    >
+        PreviewDragOver="flowDocReader_PreviewDragOver"
+        >
             <FlowDocument x:Name="flowDoc"
             AllowDrop="True"
             Background="{Binding Path=BackgroundColor, Source={x:Static p:Settings.Default}}" 
@@ -32,7 +32,7 @@
             LineStackingStrategy="MaxHeight"
             PagePadding="{Binding Path=PagePadding, Source={x:Static p:Settings.Default}}"
             TextAlignment="Left"
-        >
+            >
                 <FlowDocument.Resources>
                     <Style TargetType="{x:Type Paragraph}">
                         <Setter Property="Margin" Value="18"/>
@@ -51,17 +51,36 @@
                 </Paragraph>
 
                 <Paragraph>
+                    By default, text file will be loaded using current locale. If you'd like to reload it using UTF-8, press
+                    <Bold>U</Bold>. If you'd like to reload it using ANSI code page (you can specify the code page number in config file), press
+                    <Bold>L</Bold>.
+                </Paragraph>
+
+                <Paragraph>
                     For other options, please find the settings in config file.
                 </Paragraph>
 
             </FlowDocument>
         </FlowDocumentReader>
-        <TextBlock x:Name="overlayText"
+        <Grid>
+            <Border x:Name="roundBorder"
+            CornerRadius="5" 
             Visibility="Hidden"
-            Background="Transparent"
-            Foreground="Yellow"
-            FontWeight="Bold"
-            TextAlignment="Center">
-        </TextBlock>
+            Opacity="0.5"
+            BorderBrush="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
+            BorderThickness="1"
+            Margin="5"
+            Width="80" Height="20"
+            >
+                <TextBlock x:Name="overlayText"
+                Visibility="Hidden"
+                Background="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
+                Foreground="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
+                FontWeight="Bold"
+                TextAlignment="Center"
+                Opacity="0.5"
+                ></TextBlock>
+            </Border>
+        </Grid>
     </Grid>
 </Window>

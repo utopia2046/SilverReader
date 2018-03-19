@@ -12,11 +12,13 @@ namespace SilverReaderApp
     class OverlayMessage
     {
         private TextBlock messageBox;
+        private Border border;
         private DispatcherTimer timer;
 
-        public OverlayMessage(TextBlock messageTextBlock, int displayTimeInMs = 1000)
+        public OverlayMessage(TextBlock messageTextBlock, Border roundBorder, int displayTimeInMs = 1000)
         {
             messageBox = messageTextBlock;
+            border = roundBorder;
             timer = new DispatcherTimer();
             timer.Interval = TimeSpan.FromMilliseconds(displayTimeInMs);
             timer.Tick += Timer_Tick;
@@ -31,6 +33,7 @@ namespace SilverReaderApp
 
             messageBox.Text = message;
             messageBox.Visibility = Visibility.Visible;
+            border.Visibility = Visibility.Visible;
 
             timer.Start();
         }
@@ -39,6 +42,7 @@ namespace SilverReaderApp
         {
             timer.Stop();
             messageBox.Visibility = Visibility.Hidden;
+            border.Visibility = Visibility.Hidden;
         }
     }
 }
