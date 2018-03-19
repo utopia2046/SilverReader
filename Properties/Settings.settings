@@ -47,5 +47,8 @@
     <Setting Name="ParagraphMargin" Type="System.Double" Scope="User">
       <Value Profile="(Default)">18</Value>
     </Setting>
+    <Setting Name="CodePage" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">936</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
